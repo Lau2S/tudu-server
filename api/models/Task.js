@@ -6,14 +6,12 @@ const mongoose = require("mongoose");
  * Represents application users stored in MongoDB.
  * Includes authentication fields and automatic timestamps.
  */
-const UserSchema = new mongoose.Schema(
+const TaskSchema = new mongoose.Schema(
     {
-        firstName: { type: String, required: true },
-        lastName: { type: String, required: true },
-        // Debe ser hasheado la contraseña
-        age: { type: Number, required: true },
-        email: { type: String, required: true, unique: true },
-        password: { type: String, required: true },
+        user_id : { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        title: { type: String, required: true },
+        detail: { type: String },
+        state: { type: String, default: "Pendiente..." },
     },
     {
         /**
@@ -27,4 +25,4 @@ const UserSchema = new mongoose.Schema(
  * Mongoose model for the User collection.
  * Provides an interface to interact with user documents.
  */
-module.exports = mongoose.model("User", UserSchema);
+module.exports = mongoose.model("Task", TaskSchema);
