@@ -23,6 +23,7 @@ const UserSchema = new mongoose.Schema(
     }
 );
 
+
 /**
  * Mongoose model for the User collection.
  * Provides an interface to interact with user documents.
