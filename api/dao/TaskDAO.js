@@ -2,17 +2,17 @@ const Task = require("../models/Task");
 const GlobalDAO = require("./GlobalDAO");
 
 /**
- * Data Access Object (DAO) for the User model.
+ * Data Access Object (DAO) for the Task model.
  *
  * Extends the generic {@link GlobalDAO} class to provide
  * database operations (create, read, update, delete, getAll)
- * specifically for User documents.
+ * specifically for Task documents.
  */
 class TaskDAO extends GlobalDAO {
   /**
    * Create a new TaskDAO instance.
    *
-   * Passes the User Mongoose model to the parent class so that
+   * Passes the Task Mongoose model to the parent class so that
    * all inherited CRUD methods operate on the User collection.
    */
   constructor() {
@@ -21,7 +21,7 @@ class TaskDAO extends GlobalDAO {
 }
 
 /**
- * Export a singleton instance of UserDAO.
+ * Export a singleton instance of TaskDAO.
  *
  * This ensures the same DAO instance is reused across the app,
  * avoiding redundant instantiations.

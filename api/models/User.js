@@ -9,7 +9,6 @@ const userSchema = new mongoose.Schema(
   {
     username: {
       type: String,
-      required: [true, "Username is required"],
       unique: true,
       trim: true,
       minlength: [3, "Username must be at least 3 characters long"],
@@ -30,11 +29,13 @@ const userSchema = new mongoose.Schema(
     },
     firstName: {
       type: String,
+      required: [true, "First name is required"],
       trim: true,
       maxlength: [50, "First name cannot exceed 50 characters"],
     },
     lastName: {
       type: String,
+      required: [true, "Last name is required"],
       trim: true,
       maxlength: [50, "Last name cannot exceed 50 characters"],
     },
@@ -65,7 +66,10 @@ const userSchema = new mongoose.Schema(
  */
 userSchema.methods.validatePassword = async function (candidatePassword) {
   console.log("Validando contraseña...");
-  console.log("Contraseña candidata:", candidatePassword.substring(0, 3) + "...");
+  console.log(
+    "Contraseña candidata:",
+    candidatePassword.substring(0, 3) + "..."
+  );
   console.log("Contraseña almacenada:", this.password.substring(0, 15) + "...");
 
   const isValid = await bcrypt.compare(candidatePassword, this.password);
