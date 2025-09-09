@@ -2,13 +2,14 @@ const express = require("express");
 const router = express.Router();
 
 const TaskController = require("../controllers/TaskController");
+const verify = require("../middleware/verifyToken");
 
 /**
  * @route GET /tasks
  * @description Retrieve all tasks.
  * @access Public
  */
-router.get("/", (req, res) => TaskController.getAll(req, res));
+//router.get("/", (req, res) => TaskController.getAll(req, res));
 
 /**
  * @route GET /tasks/:id
@@ -26,7 +27,9 @@ router.get("/:id", (req, res) => TaskController.read(req, res));
  * @body {string} detail - The task's details.
  * @access Public
  */
-router.post("/", (req, res) => TaskController.create(req, res));
+router.post("/", verify, (req, res) => TaskController.create(req, res));
+
+router.get("/", verify, (req, res) => TaskController.getAllByUser(req, res));
 
 /**
  * @route PUT /tasks/:id

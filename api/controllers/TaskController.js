@@ -18,10 +18,52 @@ class TaskController extends GlobalController {
   constructor() {
     super(TaskDAO);
   }
+
+  async create(req, res) {
+    try {
+      const { title, detail, date, state } = req.body;
+
+      const user_email = req.user.email;
+
+      const newTask = await this.dao.create({
+        user_email,
+        title,
+        detail,
+        date,
+        state,
+      });
+
+      res.status(201).json({
+        message: "Tarea creada exitosamente",
+        taskId: newTask._id,
+        task: newTask,
+      });
+    } catch (error) {
+      res.status(500).json({
+        message: "No pudimos guardar tu tarea, inténtalo de nuevo más tarde",
+        error: error.message,
+      });
+    }
+  }
+
+  async getAllByUser(req, res) {
+    try {
+      const user_email = req.user.email;
+      const tasks = await this.dao.model
+        .find({ user_email })
+        .sort({ createdAt: -1 });
+      res.json(tasks);
+    } catch (error) {
+      res.status(500).json({
+        message: "No pudimos obtener tus tareas, inténtalo de nuevo más tarde",
+        error: error.message,
+      });
+    }
+  }
 }
 
 /**
- * Export a singleton instance of UserController.
+ * Export a singleton instance of TaskController.
  *
  * This allows the same controller to be reused across routes
  * without creating multiple instances.

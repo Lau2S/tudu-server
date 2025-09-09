@@ -1,17 +1,21 @@
 const mongoose = require("mongoose");
 
 /**
- * User schema definition.
+ * Task schema definition.
  *
- * Represents application users stored in MongoDB.
- * Includes authentication fields and automatic timestamps.
+ * Represents application tasks stored in MongoDB.
  */
 const TaskSchema = new mongoose.Schema(
   {
     user_email: { type: String, ref: "User", required: true },
-    title: { type: String, required: true },
-    detail: { type: String },
-    state: { type: String, default: "Pendiente..." },
+    title: { type: String, required: true, maxlength: 50 },
+    detail: { type: String, maxlength: 500 },
+    state: {
+      type: String,
+      enum: ["Por Hacer", "Haciendo", "Hecho"],
+      default: "Por Hacer",
+    },
+    date: { type: Date, required: true },
   },
   {
     /**
@@ -22,7 +26,7 @@ const TaskSchema = new mongoose.Schema(
 );
 
 /**
- * Mongoose model for the User collection.
- * Provides an interface to interact with user documents.
+ * Mongoose model for the Task collection.
+ * Provides an interface to interact with task documents.
  */
 module.exports = mongoose.model("Task", TaskSchema);
