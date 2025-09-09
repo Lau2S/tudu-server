@@ -81,6 +81,13 @@ router.post("/auth/logout", verify, (req, res) => {
   return res.status(200).json({ message: "Sesión cerrada correctamente" });
 });
 
+router.post("/auth/forgot-password", (req, res) =>
+  UserController.forgotPassword(req, res)
+);
+router.post("/auth/reset-password/:token", (req, res) =>
+  UserController.resetPassword(req, res)
+);
+
 router.put("/:id/lock", adminKey, (req, res) => UserController.lock(req, res));
 router.put("/:id/unlock", adminKey, (req, res) =>
   UserController.unlock(req, res)

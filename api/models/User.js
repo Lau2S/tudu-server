@@ -47,6 +47,13 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
+    age: { type: Number, min: 13 },
+
+    resetPasswordToken: { type: String },
+    resetPasswordExpires: { type: Date },
+
+    isLocked: { type: Boolean, default: false },
   },
   {
     timestamps: true,

@@ -1,7 +1,8 @@
 const GlobalController = require("./GlobalController");
 const UserDAO = require("../dao/UserDAO");
-const User = require("../models/User");
 const jwt = require("jsonwebtoken");
+const sendEmail = require("../utils/sendEmail");
+const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 
 /**
@@ -171,6 +172,90 @@ class UserController extends GlobalController {
     } catch (error) {
       console.error(error);
       return res.status(500).json({ message: "Error al desbloquear usuario" });
+    }
+  }
+
+  async forgotPassword(req, res) {
+    try {
+      const { email } = req.body;
+      const user = await this.dao.findByEmail(email);
+
+      if (!user) {
+        return res
+          .status(202)
+          .json({ message: "Si el correo es válido recibirá instrucciones" });
+      }
+
+      const resetToken = jwt.sign(
+        { userId: user._id },
+        process.env.JWT_SECRET,
+        { expiresIn: "1h" }
+      );
+
+      user.resetPasswordToken = resetToken;
+      user.resetPasswordExpires = Date.now() + 3600000; // 1h
+      await user.save({ validateBeforeSave: false });
+
+      const resetUrl = `https://tudu-client.vercel.app/auth/reset-password/${resetToken}`;
+      await sendEmail(
+        user.email,
+        "Restablecer contraseña",
+        `Haz clic en este enlace para restablecer tu contraseña: ${resetUrl}`
+      );
+
+      return res
+        .status(200)
+        .json({ message: "Revisa tu correo para continuar" });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Inténtalo de nuevo más tarde" });
+    }
+  }
+
+  async resetPassword(req, res) {
+    try {
+      const { token } = req.params;
+      const { password, confirmPassword } = req.body;
+
+      if (password !== confirmPassword) {
+        return res
+          .status(400)
+          .json({ message: "Las contraseñas no coinciden" });
+      }
+
+      const regex =
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
+      if (!regex.test(password)) {
+        return res.status(400).json({
+          message:
+            "La contraseña debe tener al menos 8 caracteres, mayúscula, minúscula, número y carácter especial",
+        });
+      }
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+      const user = await User.findOne({
+        _id: decoded.userId,
+        resetPasswordToken: token,
+        resetPasswordExpires: { $gt: Date.now() },
+      });
+
+      if (!user) {
+        return res.status(400).json({ message: "Token inválido o expirado" });
+      }
+
+      user.password = password;
+
+      // Invalidar token
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpires = undefined;
+
+      await user.save();
+
+      return res.status(200).json({ message: "Contraseña actualizada" });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Inténtalo de nuevo más tarde" });
     }
   }
 }
