@@ -50,6 +50,8 @@ const UserSchema = new mongoose.Schema(
     },
 
     age: { type: Number, min: 13 },
+
+    isLocked: { type: Boolean, default: false },
   },
   {
     /**
@@ -74,8 +76,16 @@ UserSchema.methods.validatePassword = async function validatePassword(data) {
   return bcrypt.compare(data, this.password);
 };
 
+function adminKey(req, res, next) {
+  if (req.headers["x-admin-key"] !== process.env.ADMIN_KEY) {
+    return res.status(403).json({ message: "Forbidden" });
+  }
+  next();
+}
+
 /**
  * Mongoose model for the User collection.
  * Provides an interface to interact with user documents.
  */
 module.exports = mongoose.model("User", UserSchema);
+module.exports.adminKey = adminKey;

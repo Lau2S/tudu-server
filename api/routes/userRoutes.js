@@ -1,7 +1,10 @@
 const express = require("express");
+const verify = require("../middleware/verifyToken");
+const loginLimiter = require("../middleware/rateLimit");
 const router = express.Router();
 
 const UserController = require("../controllers/UserController");
+const { adminKey } = require("../models/User");
 
 /**
  * @route GET /users
@@ -16,7 +19,12 @@ router.get("/", (req, res) => UserController.getAll(req, res));
  * @param {string} id - The unique identifier of the user.
  * @access Public
  */
-router.get("/:id", (req, res) => UserController.read(req, res));
+router.get("/:id", verify, (req, res) => {
+  if (req.user.userId !== String(req.params.id)) {
+    return res.status(403).json({ message: "Forbidden" });
+  }
+  UserController.read(req, res);
+});
 
 /**
  * @route POST /users
@@ -35,7 +43,12 @@ router.post("/", (req, res) => UserController.create(req, res));
  * @body {string} [password] - Updated password (optional).
  * @access Public
  */
-router.put("/:id", (req, res) => UserController.update(req, res));
+router.put("/:id", verify, (req, res) => {
+  if (req.user.userId !== String(req.params.id)) {
+    return res.status(403).json({ message: "Forbidden" });
+  }
+  UserController.update(req, res);
+});
 
 /**
  * @route DELETE /users/:id
@@ -43,7 +56,35 @@ router.put("/:id", (req, res) => UserController.update(req, res));
  * @param {string} id - The unique identifier of the user.
  * @access Public
  */
-router.delete("/:id", (req, res) => UserController.delete(req, res));
+router.delete("/:id", verify, (req, res) => {
+  if (req.user.userId !== String(req.params.id)) {
+    return res.status(403).json({ message: "Forbidden" });
+  }
+  UserController.delete(req, res);
+});
+
+/**
+ * @route POST /users/auth/login
+ * @description Log in user and return JWT token
+ * @body {string} email - User's email
+ */
+router.post("/auth/login", loginLimiter, (req, res) =>
+  UserController.login(req, res)
+);
+
+/**
+ * @route POST /users/auth/logout
+ * @description Log out user (client should delete token)
+ * @access Private (necesita token válido para hacer logout)
+ */
+router.post("/auth/logout", verify, (req, res) => {
+  return res.status(200).json({ message: "Sesión cerrada correctamente" });
+});
+
+router.put("/:id/lock", adminKey, (req, res) => UserController.lock(req, res));
+router.put("/:id/unlock", adminKey, (req, res) =>
+  UserController.unlock(req, res)
+);
 
 /**
  * Export the router instance to be mounted in the main routes file.
