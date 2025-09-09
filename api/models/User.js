@@ -1,91 +1,110 @@
 const mongoose = require("mongoose");
-const { isEmail, isStrongPassword } = require("validator");
 const bcrypt = require("bcryptjs");
-const SALT_WORK_FACTOR = 10;
+
 /**
- * User schema definition.
- *
- * Represents application users stored in MongoDB.
- * Includes authentication fields and automatic timestamps.
+ * User schema definition for the MongoDB collection.
+ * Sin middleware pre('save') problemático - el hash se hace en el controlador
  */
-
-isValidPassword = (password) => {
-  const passwordRegex =
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
-  return passwordRegex.test(password);
-};
-
-const UserSchema = new mongoose.Schema(
+const userSchema = new mongoose.Schema(
   {
-    /**
-     * The unique username of the user.
-     * @type {String}
-     * @required
-     */
-    username: { type: String },
-    /**
-     * The password of the user.
-     * Stored as plain text here, but should be hashed
-     * before saving in a production environment.
-     * @type {String}
-     * @required
-     */
-    password: {
+    username: {
       type: String,
-      required: true,
-      hash: true,
-      validate: [isValidPassword, "Password not strong enough"],
+      required: [true, "Username is required"],
+      unique: true,
+      trim: true,
+      minlength: [3, "Username must be at least 3 characters long"],
+      maxlength: [100, "Username cannot exceed 100 characters"],
     },
-
-    name: { type: String, required: true },
-
-    lastname: { type: String, required: true },
-
     email: {
       type: String,
-      required: true,
+      required: [true, "Email is required"],
       unique: true,
+      trim: true,
       lowercase: true,
-      validate: [isEmail, "Invalid email"],
+      match: [/^\S+@\S+\.\S+$/, "Please provide a valid email address"],
     },
-
-    age: { type: Number, min: 13 },
-
-    isLocked: { type: Boolean, default: false },
+    password: {
+      type: String,
+      required: [true, "Password is required"],
+      minlength: [8, "Password must be at least 8 characters long"],
+    },
+    firstName: {
+      type: String,
+      trim: true,
+      maxlength: [50, "First name cannot exceed 50 characters"],
+    },
+    lastName: {
+      type: String,
+      trim: true,
+      maxlength: [50, "Last name cannot exceed 50 characters"],
+    },
+    age: {
+      type: Number,
+      min: [13, "Age must be at least 13"],
+      max: [120, "Age cannot exceed 120"],
+    },
+    isLocked: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
-    /**
-     * Adds `createdAt` and `updatedAt` timestamp fields automatically.
-     */
     timestamps: true,
   }
 );
 
-UserSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-  try {
-    const salt = await bcrypt.genSalt(SALT_WORK_FACTOR);
-    this.password = await bcrypt.hash(this.password, salt);
-    return next();
-  } catch (err) {
-    return next(err);
-  }
-});
+/**
+ * Instance method to validate a given password against the stored hashed password.
+ */
+userSchema.methods.validatePassword = async function (candidatePassword) {
+  console.log("Validando contraseña...");
+  console.log("Contraseña candidata:", candidatePassword.substring(0, 3) + "...");
+  console.log("Contraseña almacenada:", this.password.substring(0, 15) + "...");
 
-UserSchema.methods.validatePassword = async function validatePassword(data) {
-  return bcrypt.compare(data, this.password);
+  const isValid = await bcrypt.compare(candidatePassword, this.password);
+  console.log("Resultado validación:", isValid);
+  return isValid;
 };
 
-function adminKey(req, res, next) {
-  if (req.headers["x-admin-key"] !== process.env.ADMIN_KEY) {
-    return res.status(403).json({ message: "Forbidden" });
+/**
+ * Virtual property to get the user's full name.
+ */
+userSchema.virtual("fullName").get(function () {
+  if (this.firstName && this.lastName) {
+    return `${this.firstName} ${this.lastName}`;
   }
-  next();
-}
+  return this.firstName || this.lastName || this.username;
+});
 
 /**
- * Mongoose model for the User collection.
- * Provides an interface to interact with user documents.
+ * Custom toJSON method to exclude sensitive information.
  */
-module.exports = mongoose.model("User", UserSchema);
+userSchema.methods.toJSON = function () {
+  const userObject = this.toObject();
+  delete userObject.password;
+  delete userObject.__v;
+  return userObject;
+};
+
+/**
+ * Static method to find a user by email.
+ */
+userSchema.statics.findByEmail = function (email) {
+  return this.findOne({ email: email.toLowerCase() });
+};
+
+/**
+ * Admin key middleware for sensitive operations.
+ */
+const adminKey = (req, res, next) => {
+  const { adminKey } = req.headers;
+  if (adminKey !== process.env.ADMIN_KEY) {
+    return res.status(403).json({ message: "Forbidden: Invalid admin key" });
+  }
+  next();
+};
+
+const User = mongoose.model("User", userSchema);
+
+module.exports = User;
 module.exports.adminKey = adminKey;
