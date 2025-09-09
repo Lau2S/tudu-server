@@ -22,7 +22,7 @@ const UserSchema = new mongoose.Schema(
      * @type {String}
      * @required
      */
-    username: { type: String, required: true },
+    username: { type: String },
     /**
      * The password of the user.
      * Stored as plain text here, but should be hashed
@@ -37,9 +37,9 @@ const UserSchema = new mongoose.Schema(
       validate: [isValidPassword, "Password not strong enough"],
     },
 
-    name: { type: String },
+    name: { type: String, required: true },
 
-    lastname: { type: String },
+    lastname: { type: String, required: true },
 
     email: {
       type: String,
