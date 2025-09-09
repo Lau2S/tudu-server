@@ -1,5 +1,6 @@
 const express = require("express");
 const userRoutes = require("./userRoutes");
+const taskRoutes = require("./taskRoutes");
 
 const router = express.Router();
 
@@ -15,6 +16,8 @@ const router = express.Router();
  *   - DELETE /users/:id  → Delete a user by ID
  */
 router.use("/users", userRoutes);
+
+router.use("/tasks", taskRoutes);
 
 /**
  * Export the main router instance.
