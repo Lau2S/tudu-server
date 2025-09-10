@@ -1,9 +1,56 @@
+/**
+ * @fileoverview Email utility module for sending emails via SMTP.
+ * Provides a simple interface for sending emails using nodemailer with HTML support.
+ * Configured to work with environment variables for SMTP settings.
+ * @author Tudu Development Team
+ * @version 1.0.0
+ * @requires nodemailer
+ */
+
 const nodemailer = require("nodemailer");
 
+/**
+ * Sends an email using SMTP configuration from environment variables.
+ * Creates a transporter instance and sends both text and HTML versions of the email.
+ * 
+ * @async
+ * @function sendEmail
+ * @param {string} to - Recipient email address
+ * @param {string} subject - Email subject line
+ * @param {string} text - Email content in plain text format
+ * @returns {Promise<void>} Resolves when email is sent successfully
+ * @throws {Error} Throws error if email sending fails
+ * 
+ * @example
+ * // Send a simple email
+ * await sendEmail(
+ *   'user@example.com',
+ *   'Welcome to Tudu',
+ *   'Thank you for signing up!'
+ * );
+ * 
+ * @example
+ * // Send password reset email
+ * const resetUrl = 'https://app.com/reset/token123';
+ * await sendEmail(
+ *   'user@example.com',
+ *   'Password Reset',
+ *   `Click here to reset your password: ${resetUrl}`
+ * );
+ * 
+ * @requires process.env.SMTP_HOST - SMTP server hostname
+ * @requires process.env.SMTP_PORT - SMTP server port number
+ * @requires process.env.SMTP_USER - SMTP authentication username
+ * @requires process.env.SMTP_PASS - SMTP authentication password
+ */
 async function sendEmail(to, subject, text) {
   try {
-    // Configuración del transporter
-    const transporter = nodemailer.createTransport({
+    /**
+     * Create SMTP transporter with environment configuration.
+     * Uses TLS encryption (secure: false with STARTTLS).
+     * @type {nodemailer.Transporter}
+     */
+    const transporter = nodemailer.createTransporter({
       host: process.env.SMTP_HOST,
       port: process.env.SMTP_PORT,
       secure: false,
@@ -13,8 +60,13 @@ async function sendEmail(to, subject, text) {
       },
     });
 
+    /**
+     * Email options configuration.
+     * Includes both plain text and HTML versions for better compatibility.
+     * @type {nodemailer.SendMailOptions}
+     */
     const mailOptions = {
-      from: `"Soporte App" <${process.env.SMTP_USER}>`,
+      from: `"Tudu Support" <${process.env.SMTP_USER}>`,
       to,
       subject,
       text,
@@ -29,4 +81,9 @@ async function sendEmail(to, subject, text) {
   }
 }
 
+/**
+ * Export the sendEmail function as the main module export.
+ * @module sendEmail
+ * @type {Function}
+ */
 module.exports = sendEmail;
