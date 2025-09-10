@@ -18,6 +18,16 @@ class UserDAO extends GlobalDAO {
   constructor() {
     super(User);
   }
+
+  async findByEmail(email) {
+    try {
+      const document = await this.model.findOne({ email: email });
+      if (!document) throw new Error("Correo o contraseña inválidos");
+      return document;
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  }
 }
 
 /**
