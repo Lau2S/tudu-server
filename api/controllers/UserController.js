@@ -112,7 +112,9 @@ class UserController extends GlobalController {
       user.resetPasswordExpires = Date.now() + 3600000; // 1h
       await user.save({ validateBeforeSave: false });
 
-      const resetUrl = `https://tudu-client.vercel.app/auth/reset-password/${resetToken}`;
+      
+      const resetUrl = `http://localhost:5173/#/recovery-password/${resetToken}`;
+
       await sendEmail(
         user.email,
         "Restablecer contraseña",
