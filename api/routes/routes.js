@@ -1,6 +1,10 @@
 const express = require("express");
 const userRoutes = require("./userRoutes");
+<<<<<<< HEAD
 const taskRoutes = require("./taskRoutes")
+=======
+const taskRoutes = require("./taskRoutes");
+>>>>>>> f9ad72cd48b1b6ff707c43653937926394706224
 
 const router = express.Router();
 
@@ -17,6 +21,8 @@ const router = express.Router();
  */
 router.use("/users", userRoutes);
 router.use("/tasks", taskRoutes)
+
+router.use("/tasks", taskRoutes);
 
 /**
  * Export the main router instance.
