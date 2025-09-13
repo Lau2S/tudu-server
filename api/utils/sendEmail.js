@@ -50,7 +50,7 @@ async function sendEmail(to, subject, text) {
      * Uses TLS encryption (secure: false with STARTTLS).
      * @type {nodemailer.Transporter}
      */
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: process.env.SMTP_PORT,
       secure: false,
