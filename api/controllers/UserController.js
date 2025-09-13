@@ -313,7 +313,7 @@ class UserController extends GlobalController {
        * Create password reset URL.
        * Points to frontend recovery page.
        */
-      const resetUrl = `http://localhost:5173/#/recovery-password/${resetToken}`;
+      const resetUrl = `https://tudu-client.vercel.app/#/recovery-password/${resetToken}`;
 
       /**
        * Send reset email with instructions.
