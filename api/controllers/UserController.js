@@ -22,11 +22,11 @@ const bcrypt = require("bcryptjs");
  * Controller class for managing User resources and authentication.
  * Extends the generic {@link GlobalController} to inherit CRUD operations,
  * while adding specialized methods for login, password reset, and account management.
- * 
+ *
  * @class UserController
  * @extends GlobalController
  * @description Specialized controller for user authentication and management
- * 
+ *
  * @example
  * // Login user
  * POST /api/users/login
@@ -34,7 +34,7 @@ const bcrypt = require("bcryptjs");
  *   "email": "user@example.com",
  *   "password": "SecurePass123!"
  * }
- * 
+ *
  * @example
  * // Reset password request
  * POST /api/users/forgot-password
@@ -48,7 +48,7 @@ class UserController extends GlobalController {
    * The constructor passes the UserDAO to the parent class so that
    * all inherited methods (create, read, update, delete, getAll)
    * operate on the User model.
-   * 
+   *
    * @constructor
    * @description Initializes UserController with UserDAO for database operations
    */
@@ -56,10 +56,51 @@ class UserController extends GlobalController {
     super(UserDAO);
   }
 
+  async read(req, res) {
+    const email = req.user.email;
+    try {
+      const user = await this.dao.findByEmail(email);
+      if (!user) {
+        return res.status(404).json({ message: "Usuario no encontrado" });
+      }
+
+      // Exclude sensitive fields before sending response
+      const {
+        password,
+        resetPasswordToken,
+        resetPasswordExpires,
+        ...userData
+      } = user.toObject();
+      res.status(200).json(userData);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "No pudimos obtener tu perfil" });
+    }
+  }
+
+  async update(req, res) {
+    try {
+      if (req.body.email && req.body.email != req.user.email) {
+        const existingEmail = await this.dao.findByEmail(req.body.email);
+
+        if (existingEmail) {
+          return res.status(409).json({ message: "Email already in use" });
+        }
+      }
+
+      const item = await this.dao.update(req.params.id, req.body);
+
+      res.status(200).json(item);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "No pudimos actualizar tu perfil" });
+    }
+  }
+
   /**
    * Authenticate user and generate JWT token.
    * Validates credentials, checks account status, and returns authentication token.
-   * 
+   *
    * @async
    * @method login
    * @param {import('express').Request} req - Express request object
@@ -69,17 +110,17 @@ class UserController extends GlobalController {
    * @param {import('express').Response} res - Express response object
    * @returns {Promise<void>} Sends JWT token on success or error message on failure
    * @description Authenticates user and provides access token
-   * 
+   *
    * @example
    * // Successful login
    * // Request: POST /api/users/login
    * // Body: { "email": "user@example.com", "password": "correct123" }
    * // Response: 200 { "message": "Login successful", "token": "eyJhbGciOiJIUzI1NiIs..." }
-   * 
+   *
    * @example
    * // Invalid credentials
    * // Response: 401 { "message": "Correo o contraseña inválidos" }
-   * 
+   *
    * @example
    * // Locked account
    * // Response: 423 { "message": "Cuenta temporalmente bloqueada" }
@@ -92,7 +133,7 @@ class UserController extends GlobalController {
        * Throws error if user not found.
        */
       const user = await this.dao.findByEmail(email);
-      
+
       /**
        * Validate password against stored hash.
        * Uses bcrypt comparison from User model method.
@@ -126,7 +167,7 @@ class UserController extends GlobalController {
         process.env.JWT_SECRET,
         { expiresIn: "2h" }
       );
-      
+
       /**
        * Return successful login with token.
        */
@@ -143,7 +184,7 @@ class UserController extends GlobalController {
   /**
    * Lock a user account to prevent login.
    * Administrative function to temporarily disable user access.
-   * 
+   *
    * @async
    * @method lock
    * @param {import('express').Request} req - Express request object
@@ -152,13 +193,13 @@ class UserController extends GlobalController {
    * @param {import('express').Response} res - Express response object
    * @returns {Promise<void>} Sends confirmation or error message
    * @description Locks user account for security purposes
-   * 
+   *
    * @example
    * // Lock user account
    * // Request: POST /api/users/lock
    * // Body: { "email": "user@example.com" }
    * // Response: 200 { "message": "Cuenta bloqueada", "user": { ... } }
-   * 
+   *
    * @example
    * // User not found
    * // Response: 404 { "message": "Usuario no encontrado" }
@@ -166,7 +207,7 @@ class UserController extends GlobalController {
   async lock(req, res) {
     try {
       const { email } = req.body;
-      
+
       /**
        * Find and update user to locked status.
        * Uses findOneAndUpdate for atomic operation.
@@ -197,7 +238,7 @@ class UserController extends GlobalController {
   /**
    * Unlock a user account to restore login access.
    * Administrative function to re-enable user access.
-   * 
+   *
    * @async
    * @method unlock
    * @param {import('express').Request} req - Express request object
@@ -206,13 +247,13 @@ class UserController extends GlobalController {
    * @param {import('express').Response} res - Express response object
    * @returns {Promise<void>} Sends confirmation or error message
    * @description Unlocks user account to restore access
-   * 
+   *
    * @example
    * // Unlock user account
    * // Request: POST /api/users/unlock
    * // Body: { "email": "user@example.com" }
    * // Response: 200 { "message": "Cuenta desbloqueada", "user": { ... } }
-   * 
+   *
    * @example
    * // User not found
    * // Response: 404 { "message": "Usuario no encontrado" }
@@ -220,7 +261,7 @@ class UserController extends GlobalController {
   async unlock(req, res) {
     try {
       const { email } = req.body;
-      
+
       /**
        * Find and update user to unlocked status.
        * Uses findOneAndUpdate for atomic operation.
@@ -251,7 +292,7 @@ class UserController extends GlobalController {
   /**
    * Initiate password reset process by sending reset email.
    * Generates secure token and sends reset instructions to user's email.
-   * 
+   *
    * @async
    * @method forgotPassword
    * @param {import('express').Request} req - Express request object
@@ -260,13 +301,13 @@ class UserController extends GlobalController {
    * @param {import('express').Response} res - Express response object
    * @returns {Promise<void>} Sends confirmation message regardless of email validity
    * @description Initiates password reset process with email verification
-   * 
+   *
    * @example
    * // Request password reset
    * // Request: POST /api/users/forgot-password
    * // Body: { "email": "user@example.com" }
    * // Response: 200 { "message": "Revisa tu correo para continuar" }
-   * 
+   *
    * @example
    * // Invalid email (same response for security)
    * // Response: 202 { "message": "Si el correo es válido recibirá instrucciones" }
@@ -274,7 +315,7 @@ class UserController extends GlobalController {
   async forgotPassword(req, res) {
     try {
       const { email } = req.body;
-      
+
       /**
        * Find user by email.
        * May throw error if user doesn't exist.
@@ -340,7 +381,7 @@ class UserController extends GlobalController {
   /**
    * Reset user password using valid reset token.
    * Validates token, password strength, and updates user password securely.
-   * 
+   *
    * @async
    * @method resetPassword
    * @param {import('express').Request} req - Express request object
@@ -352,21 +393,21 @@ class UserController extends GlobalController {
    * @param {import('express').Response} res - Express response object
    * @returns {Promise<void>} Sends confirmation or error message
    * @description Completes password reset process with token validation
-   * 
+   *
    * @example
    * // Reset password successfully
    * // Request: POST /api/users/reset-password/eyJhbGciOiJIUzI1NiIs...
    * // Body: { "password": "NewSecure123!", "confirmPassword": "NewSecure123!" }
    * // Response: 200 { "message": "Contraseña actualizada" }
-   * 
+   *
    * @example
    * // Password mismatch
    * // Response: 400 { "message": "Las contraseñas no coinciden" }
-   * 
+   *
    * @example
    * // Weak password
    * // Response: 400 { "message": "La contraseña debe tener al menos 8 caracteres..." }
-   * 
+   *
    * @example
    * // Invalid/expired token
    * // Response: 400 { "message": "Token inválido o expirado" }
@@ -455,7 +496,7 @@ class UserController extends GlobalController {
  * Export a singleton instance of UserController.
  * This allows the same controller to be reused across routes
  * without creating multiple instances, maintaining state consistency.
- * 
+ *
  * @type {UserController}
  * @description Singleton instance for user management operations
  * @example

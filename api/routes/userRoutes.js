@@ -19,10 +19,14 @@ router.get("/", (req, res) => UserController.getAll(req, res));
  * @param {string} id - The unique identifier of the user.
  * @access Public
  */
-router.get("/:id", verify, (req, res) => {
-  if (req.user.userId !== String(req.params.id)) {
-    return res.status(403).json({ message: "Forbidden" });
-  }
+// router.get("/:id", verify, (req, res) => {
+//   if (req.user.userId !== String(req.params.id)) {
+//     return res.status(403).json({ message: "Forbidden" });
+//   }
+//   UserController.read(req, res);
+// });
+
+router.get("/me", verify, (req, res) => {
   UserController.read(req, res);
 });
 
@@ -43,7 +47,7 @@ router.post("/", (req, res) => UserController.create(req, res));
  * @body {string} [password] - Updated password (optional).
  * @access Public
  */
-router.put("/:id", verify, (req, res) => {
+router.put("/me/:id", verify, (req, res) => {
   if (req.user.userId !== String(req.params.id)) {
     return res.status(403).json({ message: "Forbidden" });
   }
