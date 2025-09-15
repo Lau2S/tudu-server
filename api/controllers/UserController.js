@@ -88,7 +88,9 @@ class UserController extends GlobalController {
         }
       }
 
-      const item = await this.dao.update(req.params.id, req.body);
+      const { password, ...otherUpdates } = req.body;
+
+      const item = await this.dao.update(req.params.id, otherUpdates);
 
       res.status(200).json(item);
     } catch (error) {
