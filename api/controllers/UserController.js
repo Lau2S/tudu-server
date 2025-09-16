@@ -81,7 +81,7 @@ class UserController extends GlobalController {
   async update(req, res) {
     try {
       if (req.body.email && req.body.email != req.user.email) {
-        const existingEmail = await this.dao.findByEmail(req.body.email);
+        const existingEmail = await this.dao.existsByEmail(req.body.email);
 
         if (existingEmail) {
           return res.status(409).json({ message: "Email already in use" });

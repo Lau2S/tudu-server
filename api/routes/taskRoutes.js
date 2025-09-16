@@ -3,7 +3,6 @@ const router = express.Router();
 
 const TaskController = require("../controllers/TaskController");
 const verify = require("../middleware/verifyToken");
-const { use } = require("react");
 const TaskDAO = require("../dao/TaskDAO");
 
 /**
