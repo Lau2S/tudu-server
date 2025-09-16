@@ -104,14 +104,14 @@ class TaskController extends GlobalController {
        * Extract user email from JWT token.
        * Token was verified by verifyToken middleware.
        */
-      const user_email = req.user.email;
+      const userId = req.user.userId;
 
       /**
        * Create new task with user association.
        * DAO handles validation and database insertion.
        */
       const newTask = await this.dao.create({
-        user_email,
+        userId,
         title,
         detail,
         date,
@@ -192,7 +192,7 @@ class TaskController extends GlobalController {
        * Extract user email from JWT token.
        * Used to filter tasks by ownership.
        */
-      const user_email = req.user.email;
+      const userId = req.user.userId;
 
       /**
        * Find tasks belonging to user.
@@ -200,7 +200,7 @@ class TaskController extends GlobalController {
        * Uses direct model access for custom sorting.
        */
       const tasks = await this.dao.model
-        .find({ user_email })
+        .find({ userId })
         .sort({ createdAt: -1 });
 
       /**
