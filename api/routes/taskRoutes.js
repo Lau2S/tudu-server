@@ -3,6 +3,7 @@ const router = express.Router();
 
 const TaskController = require("../controllers/TaskController");
 const verify = require("../middleware/verifyToken");
+const TaskDAO = require("../dao/TaskDAO");
 
 /**
  * @route GET /tasks
@@ -40,7 +41,27 @@ router.get("/", verify, (req, res) => TaskController.getAllByUser(req, res));
  * @body {string} detail - The task's details.
  * @access Public
  */
-router.put("/:id", (req, res) => TaskController.update(req, res));
+router.put("/:id", verify, (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const task = TaskDAO.model.findOne({
+      _id: id,
+      user_email: req.user.email,
+    });
+
+    if (!task) {
+      return res.status(404).json({ message: "Tarea no encontrada" });
+    }
+
+    TaskController.update(req, res);
+  } catch (error) {
+    res.status(500).json({
+      message: "No pudimos actualizar tu tarea, inténtalo de nuevo más tarde",
+      error: error.message,
+    });
+  }
+});
 
 /**
  * @route DELETE /tasks/:id

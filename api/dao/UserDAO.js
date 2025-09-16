@@ -15,11 +15,11 @@ const GlobalDAO = require("./GlobalDAO");
  * Extends the generic {@link GlobalDAO} class to provide
  * database operations (create, read, update, delete, getAll)
  * specifically for User documents with additional user-specific methods.
- * 
+ *
  * @class UserDAO
  * @extends GlobalDAO
  * @description Specialized DAO for user-related database operations
- * 
+ *
  * @example
  * // Create a new user
  * const newUser = await userDAO.create({
@@ -28,7 +28,7 @@ const GlobalDAO = require("./GlobalDAO");
  *   firstName: "John",
  *   lastName: "Doe"
  * });
- * 
+ *
  * @example
  * // Find user by email
  * const user = await userDAO.findByEmail("user@example.com");
@@ -38,7 +38,7 @@ class UserDAO extends GlobalDAO {
    * Create a new UserDAO instance.
    * Passes the User Mongoose model to the parent class so that
    * all inherited CRUD methods operate on the User collection.
-   * 
+   *
    * @constructor
    * @description Initializes UserDAO with User model for database operations
    */
@@ -49,14 +49,14 @@ class UserDAO extends GlobalDAO {
   /**
    * Find a user document by email address.
    * Specialized method for user authentication and identification.
-   * 
+   *
    * @async
    * @method findByEmail
    * @param {string} email - The email address to search for
    * @returns {Promise<Object>} The user document if found
    * @throws {Error} If user not found or database error occurs
    * @description Searches for user by unique email field
-   * 
+   *
    * @example
    * // Find user for login
    * try {
@@ -68,7 +68,7 @@ class UserDAO extends GlobalDAO {
    * } catch (error) {
    *   // Handle "Correo o contraseña inválidos" error
    * }
-   * 
+   *
    * @example
    * // Check if email already exists
    * try {
@@ -85,13 +85,13 @@ class UserDAO extends GlobalDAO {
        * Email is unique index in User schema.
        */
       const document = await this.model.findOne({ email: email });
-      
+
       /**
        * Throw error if no user found with given email.
        * Provides generic error message for security.
        */
       if (!document) throw new Error("Correo o contraseña inválidos");
-      
+
       return document;
     } catch (error) {
       /**
@@ -101,13 +101,21 @@ class UserDAO extends GlobalDAO {
       throw new Error(error.message);
     }
   }
+
+  async existsByEmail(email) {
+    try {
+      return await this.model.findOne({ email: email });
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  }
 }
 
 /**
  * Export a singleton instance of UserDAO.
  * This ensures the same DAO instance is reused across the application,
  * avoiding redundant instantiations and maintaining consistency.
- * 
+ *
  * @type {UserDAO}
  * @description Singleton instance for user database operations
  * @example

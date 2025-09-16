@@ -11,7 +11,7 @@ const mongoose = require("mongoose");
 /**
  * Task schema definition for MongoDB collection.
  * Represents application tasks with user association, content, and status tracking.
- * 
+ *
  * @type {mongoose.Schema}
  * @description Defines the structure for task documents with validation rules
  * @example
@@ -36,8 +36,13 @@ const TaskSchema = new mongoose.Schema(
      * @ref User
      * @example "user@example.com"
      */
-    user_email: { type: String, ref: "User", required: true },
-    
+    //user_email: { type: String, ref: "User", required: true },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
     /**
      * Task title or name.
      * Brief description of what needs to be done.
@@ -47,7 +52,7 @@ const TaskSchema = new mongoose.Schema(
      * @example "Review pull request"
      */
     title: { type: String, required: true, maxlength: 50 },
-    
+
     /**
      * Detailed description of the task.
      * Optional field for additional context or instructions.
@@ -57,7 +62,7 @@ const TaskSchema = new mongoose.Schema(
      * @example "Review the changes in PR #123, check for code quality and test coverage"
      */
     detail: { type: String, maxlength: 500 },
-    
+
     /**
      * Current state/status of the task.
      * Represents the workflow stage of the task.
@@ -71,7 +76,7 @@ const TaskSchema = new mongoose.Schema(
       enum: ["Por Hacer", "Haciendo", "Hecho"],
       default: "Por Hacer",
     },
-    
+
     /**
      * Due date for the task completion.
      * When the task should be completed.
@@ -96,7 +101,7 @@ const TaskSchema = new mongoose.Schema(
  * Mongoose model for the Task collection.
  * Provides an interface to interact with task documents in MongoDB.
  * Inherits all Mongoose model methods for CRUD operations.
- * 
+ *
  * @type {mongoose.Model<TaskSchema>}
  * @description Main model export for Task operations
  * @example
@@ -108,7 +113,7 @@ const TaskSchema = new mongoose.Schema(
  *   date: new Date()
  * });
  * await task.save();
- * 
+ *
  * @example
  * // Find tasks by user
  * const userTasks = await Task.find({ user_email: "user@example.com" });
