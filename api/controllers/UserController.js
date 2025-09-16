@@ -92,7 +92,15 @@ class UserController extends GlobalController {
 
       const item = await this.dao.update(req.params.id, otherUpdates);
 
-      res.status(200).json(item);
+      const payload = { userId: item._id.toString(), email: item.email };
+      const newToken = jwt.sign(payload, process.env.JWT_SECRET, {
+        expiresIn: "2h",
+      });
+
+      res.status(200).json({
+        user: item,
+        token: newToken,
+      });
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: "No pudimos actualizar tu perfil" });
