@@ -109,12 +109,12 @@ class UserController extends GlobalController {
 
   async delete(req, res) {
     try {
-      const user = req.user;
+      const user = await User.findOne({ _id: req.user.userId });
       if (!user) {
         return res.status(404).json({ message: "Usuario no encontrado" });
       }
 
-      actualPass = req.body.password;
+      const actualPass = req.body.password;
       if (!actualPass || !(await user.validatePassword(actualPass))) {
         return res.status(401).json({ message: "Contraseña incorrecta" });
       }
@@ -124,12 +124,9 @@ class UserController extends GlobalController {
       res.status(204).send();
     } catch (error) {
       console.error(error);
-      res
-        .status(500)
-        .json({
-          message:
-            "No pudimos eliminar tu perfil, intentalo de nuevo mas tarde",
-        });
+      res.status(500).json({
+        message: "No pudimos eliminar tu perfil, intentalo de nuevo mas tarde",
+      });
     }
   }
 
