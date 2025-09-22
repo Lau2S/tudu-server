@@ -69,7 +69,7 @@ router.put("/:id", verify, (req, res) => {
  * @param {string} id - The unique identifier of the task.
  * @access Public
  */
-router.delete("/:id", (req, res) => TaskController.delete(req, res));
+router.delete("/:id", verify, (req, res) => TaskController.delete(req, res));
 
 /**
  * Export the router instance to be mounted in the main routes file.

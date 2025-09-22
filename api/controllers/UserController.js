@@ -16,7 +16,7 @@ const UserDAO = require("../dao/UserDAO");
 const jwt = require("jsonwebtoken");
 const sendEmail = require("../utils/sendEmail");
 const User = require("../models/User");
-const bcrypt = require("bcryptjs");
+//const bcrypt = require("bcryptjs");
 
 /**
  * Controller class for managing User resources and authentication.
@@ -104,6 +104,32 @@ class UserController extends GlobalController {
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: "No pudimos actualizar tu perfil" });
+    }
+  }
+
+  async delete(req, res) {
+    try {
+      const user = req.user;
+      if (!user) {
+        return res.status(404).json({ message: "Usuario no encontrado" });
+      }
+
+      actualPass = req.body.password;
+      if (!actualPass || !(await user.validatePassword(actualPass))) {
+        return res.status(401).json({ message: "Contraseña incorrecta" });
+      }
+
+      await this.dao.delete(user._id);
+
+      res.status(204).send();
+    } catch (error) {
+      console.error(error);
+      res
+        .status(500)
+        .json({
+          message:
+            "No pudimos eliminar tu perfil, intentalo de nuevo mas tarde",
+        });
     }
   }
 

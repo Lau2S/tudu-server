@@ -9,8 +9,9 @@
  */
 
 const mongoose = require("mongoose");
-const { isEmail, isStrongPassword } = require("validator");
+const { isEmail } = require("validator");
 const bcrypt = require("bcryptjs");
+const Task = require("./Task");
 
 /**
  * Salt rounds for bcrypt password hashing.
@@ -25,7 +26,7 @@ const SALT_WORK_FACTOR = 10;
  * User schema definition for MongoDB collection.
  * Represents application users with authentication and profile information.
  * Includes automatic password hashing and validation.
- * 
+ *
  * @type {mongoose.Schema}
  * @description Defines the structure for user documents with security features
  * @example
@@ -46,7 +47,7 @@ const SALT_WORK_FACTOR = 10;
 /**
  * Custom password validation function.
  * Validates password strength using regex pattern.
- * 
+ *
  * @function isValidPassword
  * @param {string} password - The password to validate
  * @returns {boolean} True if password meets requirements, false otherwise
@@ -71,7 +72,7 @@ const UserSchema = new mongoose.Schema(
      * @example "john_doe"
      */
     username: { type: String },
-    
+
     /**
      * User's password for authentication.
      * Automatically hashed before saving using bcrypt.
@@ -142,7 +143,7 @@ const UserSchema = new mongoose.Schema(
      * @example "randomTokenString123"
      */
     resetPasswordToken: { type: String },
-    
+
     /**
      * Expiration date for password reset token.
      * Token becomes invalid after this date.
@@ -176,7 +177,7 @@ const UserSchema = new mongoose.Schema(
  * Pre-save middleware for password hashing.
  * Automatically hashes the password before saving to database.
  * Only runs when password field is modified.
- * 
+ *
  * @memberof UserSchema
  * @function pre
  * @param {string} event - The mongoose event ('save')
@@ -198,10 +199,22 @@ UserSchema.pre("save", async function (next) {
   }
 });
 
+UserSchema.pre("findByIdAndDelete", async function (next) {
+  try {
+    const user = await this.model.findOne(this.getFilter());
+    if (user) {
+      await Task.deleteMany({ user: user._id });
+    }
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
 /**
  * Instance method to validate password against stored hash.
  * Compares plain text password with hashed password in database.
- * 
+ *
  * @memberof UserSchema
  * @method validatePassword
  * @param {string} data - Plain text password to validate
@@ -222,10 +235,10 @@ UserSchema.methods.validatePassword = async function validatePassword(data) {
  * Middleware function to verify admin access key.
  * Checks if request contains valid admin key in headers.
  * Used to protect admin-only routes.
- * 
+ *
  * @function adminKey
  * @param {Object} req - Express request object
- * @param {Object} res - Express response object  
+ * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
  * @returns {Object} 403 response if unauthorized, calls next() if authorized
  * @description Validates x-admin-key header against environment variable
@@ -244,7 +257,7 @@ function adminKey(req, res, next) {
  * Mongoose model for the User collection.
  * Provides an interface to interact with user documents in MongoDB.
  * Includes all Mongoose model methods plus custom instance methods.
- * 
+ *
  * @type {mongoose.Model<UserSchema>}
  * @description Main model export for User operations with authentication
  * @example
@@ -256,7 +269,7 @@ function adminKey(req, res, next) {
  *   lastName: "Doe"
  * });
  * await user.save(); // password automatically hashed
- * 
+ *
  * @example
  * // Find user and validate password
  * const user = await User.findOne({ email: "user@example.com" });
