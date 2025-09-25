@@ -60,7 +60,7 @@ router.put("/me/:id", verify, (req, res) => {
  * @param {string} id - The unique identifier of the user.
  * @access Public
  */
-router.delete("/:id", verify, (req, res) => {
+router.delete("/me/:id", verify, (req, res) => {
   if (req.user.userId !== String(req.params.id)) {
     return res.status(403).json({ message: "Forbidden" });
   }

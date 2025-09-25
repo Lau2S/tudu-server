@@ -18,6 +18,20 @@ class TaskDAO extends GlobalDAO {
   constructor() {
     super(Task);
   }
+
+  async delete(id) {
+    /**
+     * Find and delete document atomically.
+     * Returns the deleted document.
+     */
+    const deletedDocument = await this.model.findByIdAndDelete(id);
+
+    /**
+     * Throw error if document not found.
+     */
+
+    return deletedDocument;
+  }
 }
 
 /**

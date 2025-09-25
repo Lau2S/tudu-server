@@ -250,6 +250,24 @@ class TaskController extends GlobalController {
       });
     }
   }
+
+  async delete(req, res) {
+    try {
+      const { id } = req.params;
+      const deletedTask = await this.dao.delete(id);
+
+      if (!deletedTask) {
+        return res
+          .status(404)
+          .json({ message: "La tarea ya no esta disponible" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({
+        message: "No pudimos eliminar tu tarea, inténtalo de nuevo más tarde",
+      });
+    }
+  }
 }
 
 /**
