@@ -224,13 +224,35 @@ class TaskController extends GlobalController {
       const { id } = req.params;
       const { title, detail, date, state } = req.body;
 
-      const dateValue = new Date(date);
+      // const dateValue = new Date(date);
 
-      if (dateValue <= new Date()) {
+      // if (dateValue <= new Date()) {
+      //   return res.status(400).json({
+      //     message: "La fecha debe ser futura",
+      //   });
+      // }
+
+      if (date) {
+      const dateValue = new Date(date);
+      const now = new Date();
+      
+      // Verificar que la fecha sea válida
+      if (isNaN(dateValue.getTime())) {
         return res.status(400).json({
-          message: "La fecha debe ser futura",
+          message: "Formato de fecha inválido",
         });
       }
+      
+      // Comparar solo fechas (sin horas) para evitar problemas de zona horaria
+      const taskDateOnly = new Date(dateValue.getFullYear(), dateValue.getMonth(), dateValue.getDate());
+      const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      
+      if (taskDateOnly < todayOnly) {
+        return res.status(400).json({
+          message: "La fecha no puede ser anterior a hoy",
+        });
+      }
+    }
 
       const updatedTask = await this.dao.update(id, {
         title,
